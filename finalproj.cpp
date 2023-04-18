@@ -7,7 +7,13 @@ import unittest
 
 # implement functions here:
 
+# Spotipy API
 
+
+# Marvel API
+
+
+# Harry Potter API
 
 
 # main:
