@@ -8,13 +8,13 @@ import json
 
 # implement functions here:
 
-# Spotipy API
+############## SPOTIPY API ###############
 
 
-# Marvel API
+############### MARVEL API ###############
 
 
-# Harry Potter API
+############ HARRY POTTER API ############
 
 url = "https://hp-api.onrender.com/api/characters"
 response = requests.get(url)
@@ -41,3 +41,4 @@ class TestHomework6(unittest.TestCase):
 if __name__ == '__main__':
     main()
     unittest.main(verbosity=2)
+
