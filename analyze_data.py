@@ -37,6 +37,53 @@ def create_visualization(db_file):
     plt.pie(values, labels=labels, autopct='%1.1f%%')
     plt.title('Distribution of Hogwarts Houses')
     plt.show()
+  
+def read_data(db_file):
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    
+    # Retrieve the team, FT_PCT, and PTS columns from the NBAplayers table
+    c.execute("SELECT team, FT_PCT, PTS FROM NBAplayers")
+    rows = c.fetchall()
+    
+    # Separate the teams, FT_PCT, and PTS into separate lists
+    teams = [row[0] for row in rows]
+    ft_pct = [row[1] for row in rows]
+    pts = [row[2] for row in rows]
+    
+    conn.close()
+    
+    return teams, ft_pct, pts
+
+
+
+################# NBA API ################
+############## EXTRA CREDIT ##############
+
+def calculate_averages(db_file):
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+
+    # Get a list of all the unique teams
+    c.execute("SELECT DISTINCT team FROM NBAplayers")
+    teams = [row[0] for row in c.fetchall()]
+
+    # Calculate the average FT_PCT and PTS for each team
+    avg_ft_pct = []
+    avg_pts = []
+    for team in teams:
+        c.execute("SELECT FT_PCT, PTS FROM NBAplayers WHERE team=?", (team,))
+        rows = c.fetchall()
+        ft_pct = [row[0] for row in rows]
+        pts = [row[1] for row in rows]
+        avg_ft_pct.append(sum(ft_pct) / len(ft_pct))
+        avg_pts.append(sum(pts) / len(pts))
+
+    conn.close()
+    
+    print("teams, avg_ft_pct, avg_pts: ")
+    print(teams, avg_ft_pct, avg_pts)
+    return teams, avg_ft_pct, avg_pts
 
 
 def main():
