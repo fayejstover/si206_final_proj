@@ -14,10 +14,10 @@ import json
 
 ############### POKEMON API ###############################################################################################################
 
-def read_POKEMON_data(db):
+def read_POKEMON_data(db_file):
     bmr_lst = []
     names_tup = ()
-    conn = sqlite3.connect(db)
+    conn = sqlite3.connect(db_file)
     c = conn.cursor()
 
     result = c.execute('SELECT * FROM Pokemon')
