@@ -8,10 +8,10 @@ import json
 
 # implement functions here:
 
-############## SPOTIPY API ###############
+############## SPOTIPY API #########################################################################################################
 
 
-############## POKEMON API ##############
+############## POKEMON API ########################################################################################################
 def open_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
@@ -47,7 +47,7 @@ def pokemon_data():
 
     
 
-########## HARRY POTTER API ##########
+########## HARRY POTTER API ####################################################################################################
 def get_hp_data():
     url = "https://hp-api.onrender.com/api/characters"
     response = requests.get(url)
@@ -101,8 +101,8 @@ def insert_hp_data(characters):
     
     
     
-################# NBA API ################
-############## EXTRA CREDIT ##############
+################# NBA API ##########################################################################################################
+############## EXTRA CREDIT ########################################################################################################
 
 def get_nba_data():
     url = "https://stats.nba.com/stats/leagueleaders?LeagueID=00&PerMode=PerGame&Scope=S&Season=2021-22&SeasonType=Regular+Season&StatCategory=PTS"
@@ -160,7 +160,8 @@ def insert_nba_data(players):
     conn.commit()
     conn.close()
 
-    
+
+################# MAIN ##########################################################################################################
 
 def main():
     
