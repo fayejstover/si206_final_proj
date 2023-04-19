@@ -9,6 +9,37 @@ import json
 # implement functions here:
 
 ############## SPOTIPY API #########################################################################################################
+def open_database(db_name):
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+db_name)
+    cur = conn.cursor()
+    return cur, conn
+
+def read_api(url):
+    req = requests.get(url)
+    info = req.text
+    text = json.loads(info)
+    return text
+
+def rickandmortydata():
+    conn = sqlite3.connect('rickandmorty.db')
+    c = conn.cursor()
+    c.execute('CREATE TABLE IF NOT EXISTS RickAndMorty (name TEXT, id INTEGER, status TEXT, species TEXT, gender TEXT)')
+    conn.commit()
+
+    data_dic = read_api('https://rickandmortyapi.com/api/character') #Fix this to include all 183 characters
+    result = c.execute('SELECT COUNT(*) FROM RickAndMorty')
+    db_length = result.fetchone()[0]
+    
+    for x in range(db_length, db_length + 25):
+        name = data_dic[x]["name"]
+        id = data_dic[x]["id"]
+        status = data_dic[x]["status"]
+        species = data_dic[x]["species"]
+        gender = data_dic[x]["gender"]
+        c.execute("INSERT OR IGNORE INTO RickAndMorty (name, id, status, species, gender) VALUES (?,?,?,?,?)",(name, id, status, species, gender))
+    conn.commit()
+    conn.close()
 
 
 ############## POKEMON API ########################################################################################################
