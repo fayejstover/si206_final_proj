@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt; plt.rcdefaults()
+import numpy as np
 import matplotlib.pyplot as plt
 import os
 import sqlite3
@@ -10,8 +12,37 @@ import json
 ############## SPOTIPY API ###############
 
 
-############### MARVEL API ###############
+############### POKEMON API ###############
+def get_bmr(db):
+    bmr_lst = []
+    names_tup = ()
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    
+    result = c.execute('SELECT * FROM Pokemon')
+    db_length = len(result.fetchall())
 
+    for x in range(1,11):
+        result = c.execute(f"SELECT height, weight FROM Pokemon WHERE id = {x}")
+        height_weight = result.fetchall()
+
+        bmr = 88.362 + (13.397 * height_weight[0][1]) + (4.799 * height_weight[0][0]) - (5.677 * 20)
+        bmr_lst.append(bmr)
+        res_names = c.execute(f"SELECT name FROM Pokemon WHERE id = {x}")
+        names = res_names.fetchone()
+        names_tup = names_tup + names
+    conn.close()
+    
+    # making the visualization
+    y_pos = np.arange(len(names_tup))
+    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    plt.xticks(y_pos, names_tup)
+    plt.ylabel('Pokemon BMR')
+    plt.xlabel('Pokemon Name')
+    plt.tick_params(axis='x', which='major', labelsize='5')
+    plt.title('Top 10 Pokemon BMR')
+
+    plt.show()
 
 ############ HARRY POTTER API ############
 
@@ -91,9 +122,9 @@ def main():
     
     
     
-# calls from MARVEL
-    
-    
+# calls from POKEMON
+get_bmr('finalproj.db')
+        
     
 # calls from HARRY POTTER
     db_file = 'hp_characters.db'
