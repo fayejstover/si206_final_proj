@@ -8,16 +8,16 @@ import json
 
 # implement functions here:
 
+############## SPOTIPY API ###############
+
+
+############## POKEMON API ##############
 def open_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
     cur = conn.cursor()
     return cur, conn
 
-############## SPOTIPY API ###############
-
-
-############### POKEMON API ###############
 def read_api(url):
     req = requests.get(url)
     info = req.text
@@ -27,11 +27,12 @@ def read_api(url):
 def pokemon_data():
     conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
+    c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
+    conn.commit()
 
     data_dic = read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
-    c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
-    result = c.execute('SELECT * FROM Pokemon')
-    db_length = len(result.fetchall())
+    result = c.execute('SELECT COUNT(*) FROM Pokemon')
+    db_length = result.fetchone()[0]
     
     for x in range(db_length, db_length + 25):
         name = data_dic['results'][x]['name']
@@ -43,6 +44,8 @@ def pokemon_data():
         c.execute("INSERT OR IGNORE INTO Pokemon (name, id, height, weight) VALUES (?,?,?,?)",(name, id, height, weight))
     conn.commit()
     conn.close()
+
+    
 
 ########## HARRY POTTER API ##########
 def get_hp_data():
@@ -62,8 +65,8 @@ def extract_hp_data(data):
         row = (
             str(character["name"]),
             str(character["house"]),
-            str(character["wand"]),
-            str(character["patronus"])
+            str(character["hogwartsStudent"]),
+            str(character["hogwartsStaff"])
         )
         characters.append(row)
     return characters
@@ -73,13 +76,13 @@ def create_hp_table():
     conn = sqlite3.connect("finalproj.db")
     c = conn.cursor()
 
-    c.execute("DROP TABLE IF EXISTS HarryPotter")
+    c.execute("DROP TABLE IF EXISTS HarryPotterCharacters")
     c.execute("""
-        CREATE TABLE HarryPotter (
+        CREATE TABLE HarryPotterCharacters (
             name TEXT,
             house TEXT,
-            wand TEXT,
-            patronus TEXT
+            hogwartsStudent TEXT,
+            hogwartsStaff TEXT
         )
     """)
 
@@ -91,16 +94,15 @@ def insert_hp_data(characters):
     conn = sqlite3.connect("finalproj.db")
     c = conn.cursor()
 
-    c.executemany("INSERT INTO HarryPotter VALUES (?, ?, ?, ?)", characters)
+    c.executemany("INSERT INTO HarryPotterCharacters VALUES (?, ?, ?, ?)", characters)
 
     conn.commit()
     conn.close()
-
-########## NBA API ##########
-############# EXTRA CREDIT #############
-
-import requests
-import sqlite3
+    
+    
+    
+################# NBA API ################
+############## EXTRA CREDIT ##############
 
 def get_nba_data():
     url = "https://stats.nba.com/stats/leagueleaders?LeagueID=00&PerMode=PerGame&Scope=S&Season=2021-22&SeasonType=Regular+Season&StatCategory=PTS"
@@ -158,7 +160,6 @@ def insert_nba_data(players):
     conn.commit()
     conn.close()
 
-
     
 
 def main():
@@ -166,23 +167,21 @@ def main():
     # calls from SPOTPY
     
     
-    # calls from POKEMON
-    open_database('Pokemon')
-    read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
-    pokemon_data()
+    # calls from MARVEL
+    
     
     # calls from HARRY POTTER
     hp_data = get_hp_data()
     hp_characters = extract_hp_data(hp_data)
     create_hp_table()
     insert_hp_data(hp_characters)
-
-    # print rows of data from HP table
+    
+    # retrieve the data from the database
     conn = sqlite3.connect("finalproj.db")
     c = conn.cursor()
-    c.execute("SELECT * FROM HarryPotter")
+    c.execute("SELECT * FROM HarryPotterCharacters")
     rows = c.fetchall()
-    print("Harry Potter characters:")
+    conn.close()
 
     # calls from NBA
     q_data = get_nba_data()
@@ -190,16 +189,7 @@ def main():
     create_nba_table()
     insert_nba_data(quotes)
 
-    # print rows of data from NBA table
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM NBAplayers")
-    rows = c.fetchall()
-    print("NBA players:")
-    for row in rows:
-        print(row)
-    conn.close()
-
 
 if __name__ == "__main__":
     main()
+
