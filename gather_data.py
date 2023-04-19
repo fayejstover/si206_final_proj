@@ -17,73 +17,91 @@ import json
 ############ HARRY POTTER API ############
 
 
-url = "https://hp-api.onrender.com/api/characters"
-rows = 25
-
-def get_data_from_api():
+def get_data():
+    url = "https://hp-api.onrender.com/api/characters"
     response = requests.get(url)
+
     if response.status_code == 200:
         data = response.json()
         return data
     else:
-        return None
+        print("error (1)")
 
-def create_database():
-    conn = sqlite3.connect('hp_characters.db')
+
+def extract_data(data):
+    characters = []
+    for character in data:
+        row = (
+            str(character["name"]),
+            str(character["house"]),
+            str(character["wand"]),
+            str(character["patronus"])
+        )
+        characters.append(row)
+    return characters
+
+
+def create_table():
+    conn = sqlite3.connect("hp_characters.db")
     c = conn.cursor()
-    c.execute('''CREATE TABLE characters
-                (id INTEGER PRIMARY KEY,
-                 name TEXT,
-                 house TEXT,
-                 patronus TEXT)''')
+
+    c.execute("DROP TABLE IF EXISTS characters")
+    c.execute("""
+        CREATE TABLE characters (
+            name TEXT,
+            house TEXT,
+            wand TEXT,
+            patronus TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
-def insert_data(data):
-    conn = sqlite3.connect('hp_characters.db')
+
+def insert_data(characters):
+    conn = sqlite3.connect("hp_characters.db")
     c = conn.cursor()
-    for row in data:
-        c.execute('''INSERT INTO characters (name, house, patronus)
-                     VALUES (?, ?, ?)''', (row['name'], row['house'], row['patronus']))
+
+    c.executemany("INSERT INTO characters VALUES (?, ?, ?, ?)", characters)
+
     conn.commit()
     conn.close()
 
-def gather_data():
-    num_rows = 0
-    while num_rows < 100:
-        data = get_data_from_api()
-        if data:
-            insert_data(data)
-            num_rows += len(data)
-            if num_rows >= 100 or num_rows % rows == 0:
-                break
-        else:
-            print("error lol (2)")
-            break
 
 
 
 # test cases: 
-
 class TestHomework6(unittest.TestCase):
 
     def test_example(self):
         self.assertEqual(1+1, 2)
 
 
+def main():
+# calls from SPOTIPY
+    
+    
+    
+# calls from MARVEL
+    
+    
+    
+# calls from HARRY POTTER
+    data = get_data()
+    characters = extract_data(data)
+    create_table()
+    insert_data(characters)
 
+    conn = sqlite3.connect("hp_characters.db")
+    c = conn.cursor()
 
+    c.execute("SELECT * FROM characters")
+    rows = c.fetchall()
+    
+    print(rows)
+    conn.close()
+    
 
 if __name__ == "__main__":
-    # calls from SPOTIPY
-    
-    
-    
-    # calls from MARVEL
-    
-    
-    
-    # calls from HARRY POTTER
-    create_database()
-    gather_data()
-
+    main()
