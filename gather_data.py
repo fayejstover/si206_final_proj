@@ -28,13 +28,13 @@ def insert_RM_data():
     c.execute('CREATE TABLE IF NOT EXISTS RickAndMorty (name TEXT, id INTEGER, status TEXT, species TEXT, gender TEXT)')
     conn.commit()
 
-    data_dic = read_api('https://rickandmortyapi.com/api/character')
+    data_dic = read_RM_api('https://rickandmortyapi.com/api/character')
     info = data_dic["info"]
     total_pages = info["pages"]
     # db_length = c.execute('SELECT COUNT(*) FROM RickAndMorty').fetchone()[0]
 
-    for page in range(1, total_pages + 1):
-        data_dic = read_api(f'https://rickandmortyapi.com/api/character/?page={page}')
+    for page in range(1, min(total_pages + 1, 5)):
+        data_dic = read_RM_api(f'https://rickandmortyapi.com/api/character/?page={page}')
         for character in data_dic["results"]:
             name = character["name"]
             id = character["id"]
@@ -45,8 +45,8 @@ def insert_RM_data():
 
     conn.commit()
     conn.close()
-
     
+
 
 ############## POKEMON API ########################################################################################################
 def open_database(db_name):
@@ -96,9 +96,13 @@ def get_hp_data():
         print("error (1)")
 
 
-def extract_hp_data(data):
+def extract_hp_data(data, start, end):
     characters = []
-    for character in data:
+    for i, character in enumerate(data):
+        if i < start:
+            continue
+        if i >= end:
+            break
         row = (
             str(character["name"]),
             str(character["house"]),
@@ -107,6 +111,7 @@ def extract_hp_data(data):
         )
         characters.append(row)
     return characters
+
 
 
 def create_hp_table():
@@ -127,14 +132,18 @@ def create_hp_table():
     conn.close()
 
 
-def insert_hp_data(characters):
+def insert_hp_data(start=0, end=100):
     conn = sqlite3.connect("finalproj.db")
     c = conn.cursor()
+
+    data = get_hp_data()
+    characters = extract_hp_data(data, start, end)
 
     c.executemany("INSERT INTO HarryPotterCharacters VALUES (?, ?, ?, ?)", characters)
 
     conn.commit()
     conn.close()
+
     
     
     
@@ -213,10 +222,13 @@ def main():
     pokemon_data()
     
     # calls from HARRY POTTER
-    hp_data = get_hp_data()
-    hp_characters = extract_hp_data(hp_data)
     create_hp_table()
-    insert_hp_data(hp_characters)
+    hp_data = get_hp_data()
+    hp_characters = extract_hp_data(hp_data, start=0, end=100)  # Provide start and end arguments
+    insert_hp_data()
+    pokemon_data()
+    insert_RM_data()
+
     
     # retrieve the data from the database
     conn = sqlite3.connect("finalproj.db")
@@ -234,6 +246,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
-    
