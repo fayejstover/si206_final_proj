@@ -25,7 +25,7 @@ def read_api(url):
     return text
 
 def pokemon_data():
-    conn = sqlite3.connect('pokemon.db')
+    conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
 
     data_dic = read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
