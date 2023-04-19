@@ -16,18 +16,32 @@ import json
 ############ HARRY POTTER API ############
 
 
-conn = sqlite3.connect('hp_characters.db')
-c = conn.cursor()
+def main():
+# calls from SPOTIPY
+    
+    
+    
+# calls from MARVEL
+    
+    
+    
+# calls from HARRY POTTER
+ 
 
-c.execute('SELECT * FROM characters')
-rows = c.fetchall()
-print(rows)
+# ignore - made to stop compilation error
 
-c.execute('SELECT house, COUNT(*) FROM characters GROUP BY house')
-rows = c.fetchall()
-print(rows)
+    labels = ["stuff 1", "stuff 2", "stuff 3", "stuff 4"]
+    values = [3, 5, 7, 22]
+    
+    # Create a bar chart using matplotlib
+    fig, ax = plt.subplots()
+    ax.bar(labels, values)
+    ax.set_title(" title of stuff ")
+    ax.set_xlabel(" x-axis title ")
+    ax.set_ylabel(" y-axis title ")
+    plt.show()
 
-conn.commit()
-conn.close()
 
+if __name__ == "__main__":
+    main()
 
