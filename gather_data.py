@@ -31,7 +31,7 @@ def insert_RM_data():
     data_dic = read_api('https://rickandmortyapi.com/api/character')
     info = data_dic["info"]
     total_pages = info["pages"]
-    db_length = c.execute('SELECT COUNT(*) FROM RickAndMorty').fetchone()[0]
+    # db_length = c.execute('SELECT COUNT(*) FROM RickAndMorty').fetchone()[0]
 
     for page in range(1, total_pages + 1):
         data_dic = read_api(f'https://rickandmortyapi.com/api/character/?page={page}')
@@ -234,3 +234,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    
+    
