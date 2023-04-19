@@ -8,11 +8,41 @@ import json
 
 # implement functions here:
 
+def open_database(db_name):
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path+'/'+db_name)
+    cur = conn.cursor()
+    return cur, conn
+
 ############## SPOTIPY API ###############
 
 
-############### MARVEL API ###############
+############### POKEMON API ###############
+def read_api(url):
+    req = requests.get(url)
+    info = req.text
+    text = json.loads(info)
+    return text
 
+def pokemon_data():
+    conn = sqlite3.connect('pokemon.db')
+    c = conn.cursor()
+
+    data_dic = read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
+    c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
+    result = c.execute('SELECT * FROM Pokemon')
+    db_length = len(result.fetchall())
+    
+    for x in range(db_length, db_length + 25):
+        name = data_dic['results'][x]['name']
+        url = data_dic['results'][x]['url']
+        pokemon_api = read_api(url)
+        height = pokemon_api['height']
+        id = pokemon_api['id']
+        weight = pokemon_api['weight']
+        c.execute("INSERT OR IGNORE INTO Pokemon (name, id, height, weight) VALUES (?,?,?,?)",(name, id, height, weight))
+    conn.commit()
+    conn.close()
 
 ########## HARRY POTTER API ##########
 def get_hp_data():
@@ -136,8 +166,10 @@ def main():
     # calls from SPOTPY
     
     
-    # calls from MARVEL
-    
+    # calls from POKEMON
+    open_database('Pokemon')
+    read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
+    pokemon_data()
     
     # calls from HARRY POTTER
     hp_data = get_hp_data()
