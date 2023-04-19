@@ -1,24 +1,25 @@
-import matplotlib.pyplot as plt; plt.rcdefaults()
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import sqlite3
 import unittest
 import requests
 import json
 
+
 # implement functions here:
 
-############## SPOTIPY API ###############
+############## SPOTIPY API ###############################################################################################################
 
 
-############### POKEMON API ###############
-def get_bmr(db):
+############### POKEMON API ###############################################################################################################
+
+def read_POKEMON_data(db):
     bmr_lst = []
     names_tup = ()
     conn = sqlite3.connect(db)
     c = conn.cursor()
-    
+
     result = c.execute('SELECT * FROM Pokemon')
     db_length = len(result.fetchall())
 
@@ -32,7 +33,7 @@ def get_bmr(db):
         names = res_names.fetchone()
         names_tup = names_tup + names
     conn.close()
-    
+
     # making the visualization
     y_pos = np.arange(len(names_tup))
     plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
@@ -46,9 +47,9 @@ def get_bmr(db):
 
     
     
-############ HARRY POTTER API ############
+############ HARRY POTTER API ############################################################################################################
 
-def read_data(db_file):
+def read_HP_data(db_file):
     conn = sqlite3.connect(db_file)
     data = {}
     # Query 
@@ -66,7 +67,7 @@ def read_data(db_file):
 read in the proper data needed for 
 calculate and visualization functions
 '''
-def calculate_counts(conn):
+def calculate_HP(conn):
     student_counts = {}
     staff_counts = {}
     house_counts = []
@@ -115,11 +116,10 @@ take the found dictionary
 make a side by side bar chart using matplotlib that has:
 the x-axis as the different houses
 te y-axis as the average hogwartsStudent and average hogwartsStaff
-
 '''
-def create_visualization(db_file):
+def create_HP_visualization(db_file):
     conn = sqlite3.connect(db_file)
-    house_counts = calculate_counts(conn)
+    house_counts = calculate_HP(conn)
     conn.close()
 
     x_labels = [hc['House'] for hc in house_counts]
@@ -146,8 +146,8 @@ def create_visualization(db_file):
 
     
 
-def create_visualization_2(db_file, conn):
-    house_counts = calculate_counts(conn)
+def create_HP_visualization_2(db_file, conn):
+    house_counts = calculate_HP(conn)
 
     houses = [hc["House"] for hc in house_counts]
     student_counts = [hc["total Student"] for hc in house_counts]
@@ -175,10 +175,10 @@ def create_visualization_2(db_file, conn):
     
     
 
-################# NBA API ################
-############## EXTRA CREDIT ##############
-
-def read_data(db_file):
+################# NBA API ################################################################################################################
+############## EXTRA CREDIT ##############################################################################################################
+'''
+def read_NBA_data(db_file):
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
     
@@ -195,7 +195,7 @@ def read_data(db_file):
     
     return teams, ft_pct, pts
 
-def calculate_averages(db_file):
+def calculate_NBA_averages(db_file):
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
 
@@ -219,45 +219,32 @@ def calculate_averages(db_file):
     print("teams, avg_ft_pct, avg_pts: ")
     print(teams, avg_ft_pct, avg_pts)
     return teams, avg_ft_pct, avg_pts
+'''
 
-
+################# MAIN ##########################################################################################################
 
 def main():
     db_file = 'finalproj.db'
- 
-# calls from SPOTIPY
-    
-    
-    
-# calls from POKEMON
-get_bmr('finalproj.db')
-        
-    
-# calls from HARRY POTTER
-    data, conn = read_data(db_file)
-    averages = calculate_counts(conn)
-    create_visualization(db_file)
-    create_visualization_2(db_file, conn)
+
+    # calls from SPOTIPY
+
+    # calls from POKEMON
+    read_POKEMON_data(db_file)
+
+    # calls from HARRY POTTER
+    data, conn = read_HP_data(db_file)
+    averages = calculate_HP(conn)
+    create_HP_visualization(db_file)
+    create_HP_visualization_2(db_file, conn)
 
     conn.commit()
     conn.close()
-    
-    plt.show()
- 
 
-# ignore - made to stop compilation error
-    '''
-    labels = ["stuff 1", "stuff 2", "stuff 3", "stuff 4"]
-    values = [3, 5, 7,  22]
-            
-    # Create a bar chart using matplotlib
-    fig, ax = plt.subplots()
-    ax.bar(labels, values)
-    ax.set_title(" title of stuff ")
-    ax.set_xlabel(" x-axis title ")
-    ax.set_ylabel(" y-axis title ")
     plt.show()
-    '''
+    
+    # calls from NBA
+    #read_NBA_data(db_file)
+    #calculate_NBA_averages(db_file)
 
 if __name__ == "__main__":
     main()
