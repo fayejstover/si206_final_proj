@@ -9,19 +9,20 @@ import json
 # implement functions here:
 
 ############## RICK AND MORTY API #################################################################################################
-def open_database(db_name):
+
+def open_RM_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
     cur = conn.cursor()
     return cur, conn
 
-def read_api(url):
+def read_RM_api(url):
     req = requests.get(url)
     info = req.text
     text = json.loads(info)
     return text
 
-def rickandmortydata():
+def insert_RM_data():
     conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
     c.execute('CREATE TABLE IF NOT EXISTS RickAndMorty (name TEXT, id INTEGER, status TEXT, species TEXT, gender TEXT)')
@@ -45,6 +46,7 @@ def rickandmortydata():
     conn.commit()
     conn.close()
 
+    
 
 ############## POKEMON API ########################################################################################################
 def open_database(db_name):
@@ -200,8 +202,10 @@ def insert_nba_data(players):
 
 def main():
     
-    # calls from SPOTPY
-    
+    # calls from RICK AND MORTY
+    cur, conn = open_RM_database('finalproj.db')
+    insert_RM_data()
+    conn.close()
     
     # calls from POKEMON
     open_database('Pokemon')
@@ -230,4 +234,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
