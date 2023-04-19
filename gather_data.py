@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import sqlite3
 import unittest
@@ -8,188 +9,242 @@ import json
 
 # implement functions here:
 
-############## SPOTIPY API #########################################################################################################
+############## SPOTIPY API ###############################################################################################################
 
 
-############## POKEMON API ########################################################################################################
-def open_database(db_name):
-    path = os.path.dirname(os.path.abspath(__file__))
-    conn = sqlite3.connect(path+'/'+db_name)
-    cur = conn.cursor()
-    return cur, conn
+############### POKEMON API ###############################################################################################################
 
-def read_api(url):
-    req = requests.get(url)
-    info = req.text
-    text = json.loads(info)
-    return text
-
-def pokemon_data():
-    conn = sqlite3.connect('finalproj.db')
-    c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
-    conn.commit()
-
-    data_dic = read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
-    result = c.execute('SELECT COUNT(*) FROM Pokemon')
-    db_length = result.fetchone()[0]
-    
-    for x in range(db_length, db_length + 25):
-        name = data_dic['results'][x]['name']
-        url = data_dic['results'][x]['url']
-        pokemon_api = read_api(url)
-        height = pokemon_api['height']
-        id = pokemon_api['id']
-        weight = pokemon_api['weight']
-        c.execute("INSERT OR IGNORE INTO Pokemon (name, id, height, weight) VALUES (?,?,?,?)",(name, id, height, weight))
-    conn.commit()
-    conn.close()
-
-    
-
-########## HARRY POTTER API ####################################################################################################
-def get_hp_data():
-    url = "https://hp-api.onrender.com/api/characters"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        print("error (1)")
-
-
-def extract_hp_data(data):
-    characters = []
-    for character in data:
-        row = (
-            str(character["name"]),
-            str(character["house"]),
-            str(character["hogwartsStudent"]),
-            str(character["hogwartsStaff"])
-        )
-        characters.append(row)
-    return characters
-
-
-def create_hp_table():
-    conn = sqlite3.connect("finalproj.db")
+def read_POKEMON_data(db):
+    bmr_lst = []
+    names_tup = ()
+    conn = sqlite3.connect(db)
     c = conn.cursor()
 
-    c.execute("DROP TABLE IF EXISTS HarryPotterCharacters")
-    c.execute("""
-        CREATE TABLE HarryPotterCharacters (
-            name TEXT,
-            house TEXT,
-            hogwartsStudent TEXT,
-            hogwartsStaff TEXT
-        )
-    """)
+    result = c.execute('SELECT * FROM Pokemon')
+    db_length = len(result.fetchall())
 
-    conn.commit()
+    for x in range(1,11):
+        result = c.execute(f"SELECT height, weight FROM Pokemon WHERE id = {x}")
+        height_weight = result.fetchall()
+
+        bmr = 88.362 + (13.397 * height_weight[0][1]) + (4.799 * height_weight[0][0]) - (5.677 * 20)
+        bmr_lst.append(bmr)
+        res_names = c.execute(f"SELECT name FROM Pokemon WHERE id = {x}")
+        names = res_names.fetchone()
+        names_tup = names_tup + names
     conn.close()
 
+    # making the visualization
+    y_pos = np.arange(len(names_tup))
+    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    plt.xticks(y_pos, names_tup)
+    plt.ylabel('Pokemon BMR')
+    plt.xlabel('Pokemon Name')
+    plt.tick_params(axis='x', which='major', labelsize='5')
+    plt.title('Top 10 Pokemon BMR')
 
-def insert_hp_data(characters):
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
+    plt.show()
 
-    c.executemany("INSERT INTO HarryPotterCharacters VALUES (?, ?, ?, ?)", characters)
-
-    conn.commit()
-    conn.close()
     
     
+############ HARRY POTTER API ############################################################################################################
+
+def read_HP_data(db_file):
+    conn = sqlite3.connect(db_file)
+    data = {}
+    # Query 
+    for row in conn.execute("SELECT house FROM HarryPotterCharacters"):
+        house = row[0]
+        if house in data:
+            data[house] += 1
+        else:
+            data[house] = 1
+    conn.commit()
+    return data, conn
+
+
+'''
+read in the proper data needed for 
+calculate and visualization functions
+'''
+def calculate_HP(conn):
+    student_counts = {}
+    staff_counts = {}
+    house_counts = []
+
+    # Query
+    for row in conn.execute("SELECT house, hogwartsStudent, hogwartsStaff FROM HarryPotterCharacters"):
+        house = row[0]
+        is_student = row[1]
+        is_staff = row[2]
+
+        # count students in house
+        if is_student == "True":
+            if house in student_counts:
+                student_counts[house] += 1
+            else:
+                student_counts[house] = 1
+                
+        # count staff in house
+        if is_staff == "True":
+            if house in staff_counts:
+                staff_counts[house] += 1
+            else:
+                staff_counts[house] = 1
+
+    for house in student_counts.keys():
+        student_count = student_counts.get(house, 0)
+        staff_count = staff_counts.get(house, 0)
+        total_count = student_count + staff_count
+
+        house_counts.append({
+            "House": house,
+            "total Student": student_count,
+            "total Staff": staff_count,
+            "AverageStudent": student_count / total_count,
+            "AverageStaff": staff_count / total_count
+        })
+
+    return house_counts
+
+
+'''
+take the found dictionary     
+    {"House": "Slytherin", 
+    "AverageStudent": ##, 
+    "AverageStaff": ##}
+make a side by side bar chart using matplotlib that has:
+the x-axis as the different houses
+te y-axis as the average hogwartsStudent and average hogwartsStaff
+'''
+def create_HP_visualization(db_file):
+    conn = sqlite3.connect(db_file)
+    house_counts = calculate_HP(conn)
+    conn.close()
+
+    x_labels = [hc['House'] for hc in house_counts]
+    student_averages = [hc['AverageStudent'] for hc in house_counts]
+    staff_averages = [hc['AverageStaff'] for hc in house_counts]
+
+    # Set the bar width
+    bar_width = 0.4
+
+    # Set the positions of the bars on the x-axis
+    r1 = range(len(student_averages))
+    r2 = [x + bar_width for x in r1]
+
+    # Create the bar chart
+    plt.bar(r1, student_averages, color='blue', width=bar_width, edgecolor='black', label='Average Student')
+    plt.bar(r2, staff_averages, color='orange', width=bar_width, edgecolor='black', label='Average Staff')
+
+    # Add labels, title, and legend
+    plt.xlabel('House')
+    plt.xticks([r + bar_width/2 for r in range(len(student_averages))], x_labels)
+    plt.ylabel('Average Count')
+    plt.title('Average Student and Staff Count by House')
+    plt.legend()
+
     
-################# NBA API ##########################################################################################################
-############## EXTRA CREDIT ########################################################################################################
 
-def get_nba_data():
-    url = "https://stats.nba.com/stats/leagueleaders?LeagueID=00&PerMode=PerGame&Scope=S&Season=2021-22&SeasonType=Regular+Season&StatCategory=PTS"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
-    }
-    response = requests.get(url, headers=headers)
+def create_HP_visualization_2(db_file, conn):
+    house_counts = calculate_HP(conn)
 
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        print("error (1)")
+    houses = [hc["House"] for hc in house_counts]
+    student_counts = [hc["total Student"] for hc in house_counts]
+    staff_counts = [hc["total Staff"] for hc in house_counts]
 
-def extract_nba_data(data):
-    players = []
-    for player in data["resultSet"]["rowSet"]:
-        try:
-            name = str(player[2])
-            team = str(player[4])
-            ft_pct = str(player[15])
-            pts = str(player[23])
-            eff = str(player[24])
-            
-            row = (name, team, ft_pct, pts, eff)
-            players.append(row)
-        except IndexError:
-            pass
-    return players
+    # Set the bar width
+    bar_width = 0.4
 
+    # Set the positions of the bars on the x-axis
+    r1 = range(len(student_counts))
+    r2 = [x + bar_width for x in r1]
 
-def create_nba_table():
-    conn = sqlite3.connect("finalproj.db")
+    # Create the bar chart
+    fig, ax = plt.subplots()
+    ax.bar(r1, student_counts, color='blue', width=bar_width, edgecolor='black', label='Students')
+    ax.bar(r2, staff_counts, color='orange', width=bar_width, edgecolor='black', label='Staff')
+
+    # Add labels, title, and legend
+    ax.set_xlabel('House')
+    ax.set_ylabel('Count')
+    ax.set_title('Counts of Students vs Staff in Each House')
+    ax.set_xticks([r + bar_width/2 for r in range(len(student_counts))])
+    ax.set_xticklabels(houses)
+    ax.legend()
+    
+    
+
+################# NBA API ################################################################################################################
+############## EXTRA CREDIT ##############################################################################################################
+'''
+def read_NBA_data(db_file):
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+    
+    # Retrieve the team, FT_PCT, and PTS columns from the NBAplayers table
+    c.execute("SELECT team, FT_PCT, PTS FROM NBAplayers")
+    rows = c.fetchall()
+    
+    # Separate the teams, FT_PCT, and PTS into separate lists
+    teams = [row[0] for row in rows]
+    ft_pct = [row[1] for row in rows]
+    pts = [row[2] for row in rows]
+    
+    conn.close()
+    
+    return teams, ft_pct, pts
+
+def calculate_NBA_averages(db_file):
+    conn = sqlite3.connect(db_file)
     c = conn.cursor()
 
-    c.execute("DROP TABLE IF EXISTS NBAplayers")
-    c.execute("""
-        CREATE TABLE NBAplayers (
-            PLAYER TEXT,
-            TEAM TEXT,
-            FT_PCT TEXT,
-            PTS TEXT,
-            EFF TEXT
-        )
-    """)
+    # Get a list of all the unique teams
+    c.execute("SELECT DISTINCT team FROM NBAplayers")
+    teams = [row[0] for row in c.fetchall()]
 
-    conn.commit()
+    # Calculate the average FT_PCT and PTS for each team
+    avg_ft_pct = []
+    avg_pts = []
+    for team in teams:
+        c.execute("SELECT FT_PCT, PTS FROM NBAplayers WHERE team=?", (team,))
+        rows = c.fetchall()
+        ft_pct = [row[0] for row in rows]
+        pts = [row[1] for row in rows]
+        avg_ft_pct.append(sum(ft_pct) / len(ft_pct))
+        avg_pts.append(sum(pts) / len(pts))
+
     conn.close()
-
-def insert_nba_data(players):
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-    c.executemany("INSERT INTO NBAplayers VALUES (?, ?, ?, ?, ?)", players)
-
-    conn.commit()
-    conn.close()
-
+    
+    print("teams, avg_ft_pct, avg_pts: ")
+    print(teams, avg_ft_pct, avg_pts)
+    return teams, avg_ft_pct, avg_pts
+'''
 
 ################# MAIN ##########################################################################################################
 
 def main():
-    
-    # calls from SPOTPY
-    
-    
-    # calls from MARVEL
-    
-    
+    db_file = 'finalproj.db'
+
+    # calls from SPOTIPY
+
+    # calls from POKEMON
+    read_POKEMON_data(db_file)
+
     # calls from HARRY POTTER
-    hp_data = get_hp_data()
-    hp_characters = extract_hp_data(hp_data)
-    create_hp_table()
-    insert_hp_data(hp_characters)
-    
-    # retrieve the data from the database
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM HarryPotterCharacters")
-    rows = c.fetchall()
+    data, conn = read_HP_data(db_file)
+    averages = calculate_HP(conn)
+    create_HP_visualization(db_file)
+    create_HP_visualization_2(db_file, conn)
+
+    conn.commit()
     conn.close()
 
+    plt.show()
+    
     # calls from NBA
-    q_data = get_nba_data()
-    quotes = extract_nba_data(q_data)
-    create_nba_table()
-    insert_nba_data(quotes)
-
+    #read_NBA_data(db_file)
+    #calculate_NBA_averages(db_file)
 
 if __name__ == "__main__":
     main()
