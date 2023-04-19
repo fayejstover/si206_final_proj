@@ -44,31 +44,140 @@ def get_bmr(db):
 
     plt.show()
 
+    
+    
 ############ HARRY POTTER API ############
 
-
-def get_house_counts(db_file):
+def read_data(db_file):
     conn = sqlite3.connect(db_file)
-    c = conn.cursor()
-    house_counts = {}
-    
-    for row in c.execute("SELECT house, COUNT(*) FROM characters GROUP BY house"):
-        house_counts[row[0]] = row[1]
-        
-    conn.close()
+    data = {}
+    # Query 
+    for row in conn.execute("SELECT house FROM HarryPotterCharacters"):
+        house = row[0]
+        if house in data:
+            data[house] += 1
+        else:
+            data[house] = 1
+    conn.commit()
+    return data, conn
+
+
+'''
+read in the proper data needed for 
+calculate and visualization functions
+'''
+def calculate_counts(conn):
+    student_counts = {}
+    staff_counts = {}
+    house_counts = []
+
+    # Query
+    for row in conn.execute("SELECT house, hogwartsStudent, hogwartsStaff FROM HarryPotterCharacters"):
+        house = row[0]
+        is_student = row[1]
+        is_staff = row[2]
+
+        # count students in house
+        if is_student == "True":
+            if house in student_counts:
+                student_counts[house] += 1
+            else:
+                student_counts[house] = 1
+                
+        # count staff in house
+        if is_staff == "True":
+            if house in staff_counts:
+                staff_counts[house] += 1
+            else:
+                staff_counts[house] = 1
+
+    for house in student_counts.keys():
+        student_count = student_counts.get(house, 0)
+        staff_count = staff_counts.get(house, 0)
+        total_count = student_count + staff_count
+
+        house_counts.append({
+            "House": house,
+            "total Student": student_count,
+            "total Staff": staff_count,
+            "AverageStudent": student_count / total_count,
+            "AverageStaff": staff_count / total_count
+        })
+
     return house_counts
 
 
+'''
+take the found dictionary     
+    {"House": "Slytherin", 
+    "AverageStudent": ##, 
+    "AverageStaff": ##}
+make a side by side bar chart using matplotlib that has:
+the x-axis as the different houses
+te y-axis as the average hogwartsStudent and average hogwartsStaff
+
+'''
 def create_visualization(db_file):
-    house_counts = get_house_counts(db_file)
+    conn = sqlite3.connect(db_file)
+    house_counts = calculate_counts(conn)
+    conn.close()
+
+    x_labels = [hc['House'] for hc in house_counts]
+    student_averages = [hc['AverageStudent'] for hc in house_counts]
+    staff_averages = [hc['AverageStaff'] for hc in house_counts]
+
+    # Set the bar width
+    bar_width = 0.4
+
+    # Set the positions of the bars on the x-axis
+    r1 = range(len(student_averages))
+    r2 = [x + bar_width for x in r1]
+
+    # Create the bar chart
+    plt.bar(r1, student_averages, color='blue', width=bar_width, edgecolor='black', label='Average Student')
+    plt.bar(r2, staff_averages, color='orange', width=bar_width, edgecolor='black', label='Average Staff')
+
+    # Add labels, title, and legend
+    plt.xlabel('House')
+    plt.xticks([r + bar_width/2 for r in range(len(student_averages))], x_labels)
+    plt.ylabel('Average Count')
+    plt.title('Average Student and Staff Count by House')
+    plt.legend()
+
     
-    labels = list(house_counts.keys())
-    values = list(house_counts.values())
+
+def create_visualization_2(db_file, conn):
+    house_counts = calculate_counts(conn)
+
+    houses = [hc["House"] for hc in house_counts]
+    student_counts = [hc["total Student"] for hc in house_counts]
+    staff_counts = [hc["total Staff"] for hc in house_counts]
+
+    # Set the bar width
+    bar_width = 0.4
+
+    # Set the positions of the bars on the x-axis
+    r1 = range(len(student_counts))
+    r2 = [x + bar_width for x in r1]
+
+    # Create the bar chart
+    fig, ax = plt.subplots()
+    ax.bar(r1, student_counts, color='blue', width=bar_width, edgecolor='black', label='Students')
+    ax.bar(r2, staff_counts, color='orange', width=bar_width, edgecolor='black', label='Staff')
+
+    # Add labels, title, and legend
+    ax.set_xlabel('House')
+    ax.set_ylabel('Count')
+    ax.set_title('Counts of Students vs Staff in Each House')
+    ax.set_xticks([r + bar_width/2 for r in range(len(student_counts))])
+    ax.set_xticklabels(houses)
+    ax.legend()
     
-    plt.pie(values, labels=labels, autopct='%1.1f%%')
-    plt.title('Distribution of Hogwarts Houses')
-    plt.show()
-  
+    
+
+################# NBA API ################
+############## EXTRA CREDIT ##############
+
 def read_data(db_file):
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
@@ -85,11 +194,6 @@ def read_data(db_file):
     conn.close()
     
     return teams, ft_pct, pts
-
-
-
-################# NBA API ################
-############## EXTRA CREDIT ##############
 
 def calculate_averages(db_file):
     conn = sqlite3.connect(db_file)
@@ -117,7 +221,10 @@ def calculate_averages(db_file):
     return teams, avg_ft_pct, avg_pts
 
 
+
 def main():
+    db_file = 'finalproj.db'
+ 
 # calls from SPOTIPY
     
     
@@ -127,8 +234,15 @@ get_bmr('finalproj.db')
         
     
 # calls from HARRY POTTER
-    db_file = 'hp_characters.db'
+    data, conn = read_data(db_file)
+    averages = calculate_counts(conn)
     create_visualization(db_file)
+    create_visualization_2(db_file, conn)
+
+    conn.commit()
+    conn.close()
+    
+    plt.show()
  
 
 # ignore - made to stop compilation error
