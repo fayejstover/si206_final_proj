@@ -29,7 +29,7 @@ def read_RM_data(db):
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
-    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'])
+    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
     plt.title('Gender Breakdown of Rick and Morty Characters')
     plt.show() 
 
