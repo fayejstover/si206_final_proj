@@ -15,8 +15,8 @@ import json
 def open_RM_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
-    return conn
-
+    cur = conn.cursor()
+    return cur, conn
 
 def read_RM_api(url):
     req = requests.get(url)
@@ -24,31 +24,27 @@ def read_RM_api(url):
     text = json.loads(info)
     return text
 
-
-def insert_RM_data():
-    conn = sqlite3.connect('finalproj.db')
+def insert_RM_data(conn):
     c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS RickAndMorty (name TEXT, id INTEGER, status TEXT, species TEXT, gender TEXT)')
-    conn.commit()
+    c.execute('CREATE TABLE IF NOT EXISTS RickAndMorty (name TEXT UNIQUE, id INTEGER UNIQUE, status TEXT, species TEXT, gender TEXT)')
+    c.execute('SELECT * FROM RickAndMorty WHERE id  = (SELECT MAX(id) FROM RickAndMorty)')
 
     data_dic = read_RM_api('https://rickandmortyapi.com/api/character')
     info = data_dic["info"]
-    total_pages = info["pages"]
-    # db_length = c.execute('SELECT COUNT(*) FROM RickAndMorty').fetchone()[0]
-
-    for page in range(1, min(total_pages + 1, 5)):
-        data_dic = read_RM_api(f'https://rickandmortyapi.com/api/character/?page={page}')
-        for character in data_dic["results"]:
-            name = character["name"]
-            id = character["id"]
-            status = character["status"]
-            species = character["species"]
-            gender = character["gender"]
-            c.execute("INSERT OR IGNORE INTO RickAndMorty (name, id, status, species, gender) VALUES (?,?,?,?,?)",(name, id, status, species, gender))
-
+    #db_length = c.execute('SELECT COUNT(*) FROM RickAndMorty').fetchone()[0]
+    result = c.execute('SELECT COUNT(*) FROM RickAndMorty')
+    db_length = result.fetchone()[0]
+    page = (db_length/20) + 1
+    data_dic = read_RM_api(f'https://rickandmortyapi.com/api/character/?page={page}')
+    for character in data_dic["results"]:
+        name = character["name"]
+        my_id = character["id"]
+        status = character["status"]
+        species = character["species"]
+        gender = character["gender"]
+        c.execute("INSERT OR IGNORE INTO RickAndMorty (name, id, status, species, gender) VALUES (?,?,?,?,?)",(name, my_id, status, species, gender))
+           
     conn.commit()
-    conn.close()
-
     
 
 
