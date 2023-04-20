@@ -1,23 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import sqlite3
-import unittest
-import requests
-import json
 
 
 # implement functions here:
 
-############## SPOTIPY API ###############################################################################################################
+############## RICK AND MORTY API #########################################################################################################
 
 
 ############### POKEMON API ###############################################################################################################
 
-def read_POKEMON_data(db):
+def read_POKEMON_data(db_file):
     bmr_lst = []
     names_tup = ()
-    conn = sqlite3.connect(db)
+    conn = sqlite3.connect(db_file)
     c = conn.cursor()
 
     result = c.execute('SELECT * FROM Pokemon')
@@ -41,9 +37,8 @@ def read_POKEMON_data(db):
     plt.ylabel('Pokemon BMR')
     plt.xlabel('Pokemon Name')
     plt.tick_params(axis='x', which='major', labelsize='5')
+    
     plt.title('Top 10 Pokemon BMR')
-
-    plt.show()
 
     
     
@@ -142,9 +137,9 @@ def create_HP_visualization(db_file):
     plt.xticks([r + bar_width/2 for r in range(len(student_averages))], x_labels)
     plt.ylabel('Average Count')
     plt.title('Average Student and Staff Count by House')
+    
     plt.legend()
 
-    
 
 def create_HP_visualization_2(db_file, conn):
     house_counts = calculate_HP(conn)
@@ -173,60 +168,96 @@ def create_HP_visualization_2(db_file, conn):
     ax.set_xticklabels(houses)
     ax.legend()
     
-    
 
 ################# NBA API ################################################################################################################
 ############## EXTRA CREDIT ##############################################################################################################
-'''
+
 def read_NBA_data(db_file):
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
     
-    # Retrieve the team, FT_PCT, and PTS columns from the NBAplayers table
-    c.execute("SELECT team, FT_PCT, PTS FROM NBAplayers")
+    # Retrieve the required columns from the NBAplayers table
+    c.execute("SELECT PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP FROM NBAplayers")
     rows = c.fetchall()
     
-    # Separate the teams, FT_PCT, and PTS into separate lists
-    teams = [row[0] for row in rows]
-    ft_pct = [row[1] for row in rows]
-    pts = [row[2] for row in rows]
+    # Separate the data into separate lists and convert to float data type
+    PTS = [float(row[0]) for row in rows]
+    REB = [float(row[1]) for row in rows]
+    AST = [float(row[2]) for row in rows]
+    STL = [float(row[3]) for row in rows]
+    BLK = [float(row[4]) for row in rows]
+    FGM = [float(row[5]) for row in rows]
+    FGA = [float(row[6]) for row in rows]
+    FTM = [float(row[7]) for row in rows]
+    FTA = [float(row[8]) for row in rows]
+    TOV = [float(row[9]) for row in rows]
+    GP = [float(row[10]) for row in rows]
     
     conn.close()
     
-    return teams, ft_pct, pts
+    return PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP
 
-def calculate_NBA_averages(db_file):
-    conn = sqlite3.connect(db_file)
-    c = conn.cursor()
 
-    # Get a list of all the unique teams
-    c.execute("SELECT DISTINCT team FROM NBAplayers")
-    teams = [row[0] for row in c.fetchall()]
+def calculate_PER(PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP):
+    PTS = float(PTS)
+    REB = float(REB)
+    AST = float(AST)
+    STL = float(STL)
+    BLK = float(BLK)
+    FGM = float(FGM)
+    FGA = float(FGA)
+    FTM = float(FTM)
+    FTA = float(FTA)
+    TOV = float(TOV)
+    GP = float(GP)
+    PER = (PTS + REB + AST + STL + BLK - (FGA - FGM) - (FTA - FTM) - TOV) / GP
+    return PER
 
-    # Calculate the average FT_PCT and PTS for each team
-    avg_ft_pct = []
-    avg_pts = []
-    for team in teams:
-        c.execute("SELECT FT_PCT, PTS FROM NBAplayers WHERE team=?", (team,))
-        rows = c.fetchall()
-        ft_pct = [row[0] for row in rows]
-        pts = [row[1] for row in rows]
-        avg_ft_pct.append(sum(ft_pct) / len(ft_pct))
-        avg_pts.append(sum(pts) / len(pts))
 
-    conn.close()
-    
-    print("teams, avg_ft_pct, avg_pts: ")
-    print(teams, avg_ft_pct, avg_pts)
-    return teams, avg_ft_pct, avg_pts
-'''
+def top_5_PER_players(db_file):
+    PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP = read_NBA_data(db_file)
+
+    players = []
+    for i in range(len(PTS)):
+        player_stats = {}
+        player_stats['name'] = 'Player ' + str(i+1)
+        player_stats['PTS'] = PTS[i]
+        player_stats['REB'] = REB[i]
+        player_stats['AST'] = AST[i]
+        player_stats['STL'] = STL[i]
+        player_stats['BLK'] = BLK[i]
+        player_stats['FGM'] = FGM[i]
+        player_stats['FGA'] = FGA[i]
+        player_stats['FTM'] = FTM[i]
+        player_stats['FTA'] = FTA[i]
+        player_stats['TOV'] = TOV[i]
+        player_stats['GP'] = GP[i]
+        player_stats['PER'] = calculate_PER(PTS[i], REB[i], AST[i], STL[i], BLK[i], FGM[i], FGA[i], FTM[i], FTA[i], TOV[i], GP[i])
+        players.append(player_stats)
+
+    players.sort(key=lambda x: x['PER'], reverse=True)
+
+    top_5 = players[:5]
+    return top_5
+
+
+def create_NBA_visualization(db_file):
+    top_players = top_5_PER_players(db_file)
+
+    player_names = [player['name'] for player in top_players]
+    player_per = [player['PER'] for player in top_players]
+
+    plt.bar(player_names, player_per)
+    plt.xlabel('Player Names')
+    plt.ylabel('PER Ratings')
+    plt.title('Top 5 NBA Players by PER Rating')
+
 
 ################# MAIN ##########################################################################################################
 
+
 def main():
     db_file = 'finalproj.db'
-
-    # calls from SPOTIPY
 
     # calls from POKEMON
     read_POKEMON_data(db_file)
@@ -237,14 +268,16 @@ def main():
     create_HP_visualization(db_file)
     create_HP_visualization_2(db_file, conn)
 
+    # calls from NBA
+    top_5_PER_players(db_file)
+    create_NBA_visualization(db_file)
+
+
     conn.commit()
     conn.close()
 
-    plt.show()
-    
-    # calls from NBA
-    #read_NBA_data(db_file)
-    #calculate_NBA_averages(db_file)
 
 if __name__ == "__main__":
     main()
+    
+    
