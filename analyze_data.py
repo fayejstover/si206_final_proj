@@ -6,7 +6,27 @@ import sqlite3
 # implement functions here:
 
 ############## RICK AND MORTY API #########################################################################################################
+def read_RM_data(db):
 
+    #calculations setup
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    result = c.execute('SELECT * FROM RickAndMorty')
+    total = result.fetchall()
+    gender = [row[4] for row in total]
+
+    #calculate male percentages 
+    male_count = (gender.count('Male') / len(gender)) * 100
+    #calculate female percentages
+    female_count = (gender.count('Female') / len(gender)) * 100
+
+
+    #making the viz
+    y = np.array([male_count, female_count])
+    mylabels = ["Male", "Female"]
+    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'])
+    plt.title('Gender Breakdown of Rick and Morty Characters')
+    plt.show() 
 
 ############### POKEMON API ###############################################################################################################
 
