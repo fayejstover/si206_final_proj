@@ -1,6 +1,9 @@
 import matplotlib.pyplot as rmplt
 import matplotlib.pyplot as pokeplt
 import matplotlib.pyplot as hpplt
+import matplotlib.pyplot as plt; plt.rcdefaults()
+import numpy as np
+import matplotlib.pyplot as plt
 import numpy as np
 import sqlite3
 
@@ -52,15 +55,16 @@ def read_POKEMON_data(db_file):
         names_tup = names_tup + names
     conn.close()
 
-    # making the visualization
+    #making the visualization
     y_pos = np.arange(len(names_tup))
-    pokeplt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
-    pokeplt.xticks(y_pos, names_tup)
-    pokeplt.ylabel('Pokemon BMR')
-    pokeplt.xlabel('Pokemon Name')
-    pokeplt.tick_params(axis='x', which='major', labelsize='5')
-    
-    pokeplt.title('Top 10 Pokemon BMR')
+    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    plt.xticks(y_pos, names_tup)
+    plt.ylabel('Pokemon BMR')
+    plt.xlabel('Pokemon Name')
+    plt.tick_params(axis='x', which='major', labelsize='5')
+    plt.title('Top 10 Pokemon BMR')
+
+    plt.show()
 
     
     
