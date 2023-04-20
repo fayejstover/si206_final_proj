@@ -159,6 +159,8 @@ def create_HP_visualization(db_file):
     plt.title('Average Student and Staff Count by House')
     
     plt.legend()
+    
+    plt.show()
 
 
 def create_HP_visualization_2(db_file, conn):
@@ -187,6 +189,8 @@ def create_HP_visualization_2(db_file, conn):
     ax.set_xticks([r + bar_width/2 for r in range(len(student_counts))])
     ax.set_xticklabels(houses)
     ax.legend()
+    
+    plt.show()
     
 
 ################# NBA API ################################################################################################################
@@ -261,7 +265,7 @@ def top_5_PER_players(db_file):
     return top_5
 
 
-def create_NBA_visualization(db_file):
+def create_NBA_visualization(db_file, conn):
     top_players = top_5_PER_players(db_file)
 
     player_names = [player['name'] for player in top_players]
@@ -271,6 +275,8 @@ def create_NBA_visualization(db_file):
     plt.xlabel('Player Names')
     plt.ylabel('PER Ratings')
     plt.title('Top 5 NBA Players by PER Rating')
+    
+    plt.show()
 
 
 ################# MAIN ##########################################################################################################
@@ -278,6 +284,9 @@ def create_NBA_visualization(db_file):
 
 def main():
     db_file = 'finalproj.db'
+    conn = sqlite3.connect(db_file)
+
+    # calls from RICK AND MORTY
 
     # calls from POKEMON
     read_POKEMON_data(db_file)
@@ -290,14 +299,14 @@ def main():
 
     # calls from NBA
     top_5_PER_players(db_file)
-    create_NBA_visualization(db_file)
-
+    create_NBA_visualization(db_file, conn)
 
     conn.commit()
     conn.close()
 
 
+
 if __name__ == "__main__":
     main()
-    
-    
+
+
