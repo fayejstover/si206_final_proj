@@ -1,4 +1,6 @@
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as rmplt
+import matplotlib.pyplot as pokeplt
+import matplotlib.pyplot as hpplt
 import numpy as np
 import sqlite3
 
@@ -24,9 +26,9 @@ def read_RM_data(db):
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
-    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'])
-    plt.title('Gender Breakdown of Rick and Morty Characters')
-    plt.show() 
+    rmplt.pie(y, labels = mylabels, colors=['lavender', 'bisque'])
+    rmplt.title('Gender Breakdown of Rick and Morty Characters')
+    rmplt.show() 
 
 ############### POKEMON API ###############################################################################################################
 
@@ -52,13 +54,13 @@ def read_POKEMON_data(db_file):
 
     # making the visualization
     y_pos = np.arange(len(names_tup))
-    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
-    plt.xticks(y_pos, names_tup)
-    plt.ylabel('Pokemon BMR')
-    plt.xlabel('Pokemon Name')
-    plt.tick_params(axis='x', which='major', labelsize='5')
+    pokeplt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    pokeplt.xticks(y_pos, names_tup)
+    pokeplt.ylabel('Pokemon BMR')
+    pokeplt.xlabel('Pokemon Name')
+    pokeplt.tick_params(axis='x', which='major', labelsize='5')
     
-    plt.title('Top 10 Pokemon BMR')
+    pokeplt.title('Top 10 Pokemon BMR')
 
     
     
@@ -149,18 +151,18 @@ def create_HP_visualization(db_file):
     r2 = [x + bar_width for x in r1]
 
     # Create the bar chart
-    plt.bar(r1, student_averages, color='blue', width=bar_width, edgecolor='black', label='Average Student')
-    plt.bar(r2, staff_averages, color='orange', width=bar_width, edgecolor='black', label='Average Staff')
+    hpplt.bar(r1, student_averages, color='blue', width=bar_width, edgecolor='black', label='Average Student')
+    hpplt.bar(r2, staff_averages, color='orange', width=bar_width, edgecolor='black', label='Average Staff')
 
     # Add labels, title, and legend
-    plt.xlabel('House')
-    plt.xticks([r + bar_width/2 for r in range(len(student_averages))], x_labels)
-    plt.ylabel('Average Count')
-    plt.title('Average Student and Staff Count by House')
+    hpplt.xlabel('House')
+    hpplt.xticks([r + bar_width/2 for r in range(len(student_averages))], x_labels)
+    hpplt.ylabel('Average Count')
+    hpplt.title('Average Student and Staff Count by House')
     
-    plt.legend()
+    hpplt.legend()
     
-    plt.show()
+    hpplt.show()
 
 
 def create_HP_visualization_2(db_file, conn):
@@ -178,7 +180,7 @@ def create_HP_visualization_2(db_file, conn):
     r2 = [x + bar_width for x in r1]
 
     # Create the bar chart
-    fig, ax = plt.subplots()
+    fig, ax = hpplt.subplots()
     ax.bar(r1, student_counts, color='blue', width=bar_width, edgecolor='black', label='Students')
     ax.bar(r2, staff_counts, color='orange', width=bar_width, edgecolor='black', label='Staff')
 
@@ -190,7 +192,7 @@ def create_HP_visualization_2(db_file, conn):
     ax.set_xticklabels(houses)
     ax.legend()
     
-    plt.show()
+    hpplt.show()
     
 
 ################# NBA API ################################################################################################################
