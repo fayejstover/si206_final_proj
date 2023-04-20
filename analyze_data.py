@@ -29,9 +29,9 @@ def read_RM_data(db):
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
-    rmplt.pie(y, labels = mylabels, colors=['lavender', 'bisque'])
-    rmplt.title('Gender Breakdown of Rick and Morty Characters')
-    rmplt.show() 
+    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'])
+    plt.title('Gender Breakdown of Rick and Morty Characters')
+    plt.show() 
 
 ############### POKEMON API ###############################################################################################################
 
@@ -293,6 +293,7 @@ def main():
     conn = sqlite3.connect(db_file)
 
     # calls from RICK AND MORTY
+    read_RM_data(db_file)
 
     # calls from POKEMON
     read_POKEMON_data(db_file)
