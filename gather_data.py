@@ -227,9 +227,9 @@ def insert_NBA_data(players):
 def main():
     
     # calls from RICK AND MORTY
-    rm_conn = open_RM_database('finalproj.db')
-    insert_RM_data()
-    rm_conn.close()
+    curr, conn = open_RM_database('finalproj.db')
+    insert_RM_data(conn)
+    conn.close()
     
     # calls from POKEMON
     poke_conn = open_POKEMON_database('finalproj.db')
