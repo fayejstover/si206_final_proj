@@ -14,7 +14,6 @@ import sqlite3
 
 ############## RICK AND MORTY API #########################################################################################################
 def read_RM_data(db):
-
     #calculations setup
     conn = sqlite3.connect(db)
     c = conn.cursor()
@@ -27,13 +26,17 @@ def read_RM_data(db):
     #calculate female percentages
     female_count = (gender.count('Female') / len(gender)) * 100
 
+    # write data to file
+    with open("finalproj.txt", "w") as f:
+        f.write("Male percentage: {:.1f}%\n".format(male_count))
+        f.write("Female percentage: {:.1f}%\n".format(female_count))
 
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
-    rmplt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
-    rmplt.title('Gender Breakdown of Rick and Morty Characters')
-    rmplt.show() 
+    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
+    plt.title('Gender Breakdown of Rick and Morty Characters')
+    plt.show()
 
 ############### POKEMON API ###############################################################################################################
 
@@ -57,15 +60,21 @@ def read_POKEMON_data(db_file):
         names_tup = names_tup + names
     conn.close()
 
+    # write data to file
+    with open("finalproj.txt", "a") as f:
+        f.write("\n\nPokemon Data:\n")
+        for i in range(len(names_tup)):
+            f.write(f"{names_tup[i]} BMR: {bmr_lst[i]:.2f}\n")
+
     #making the visualization
     y_pos = np.arange(len(names_tup))
-    pokeplt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
-    pokeplt.xticks(y_pos, names_tup)
-    pokeplt.ylabel('Pokemon BMR')
-    pokeplt.xlabel('Pokemon Name')
-    pokeplt.tick_params(axis='x', which='major', labelsize='5')
-    pokeplt.title('Top 10 Pokemon BMR')
-    pokeplt.show()
+    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    plt.xticks(y_pos, names_tup)
+    plt.ylabel('Pokemon BMR')
+    plt.xlabel('Pokemon Name')
+    plt.tick_params(axis='x', which='major', labelsize='5')
+    plt.title('Top 10 Pokemon BMR')
+    plt.show()
 
     
     
@@ -167,7 +176,7 @@ def create_HP_visualization(db_file):
     
     hpplt.legend()
     
-    #hpplt.show()
+    hpplt.show()
 
 
 def create_HP_visualization_2(db_file, conn):
@@ -317,6 +326,42 @@ def main():
 
     # calls from NBA
     create_NBA_visualization(db_file)
+
+
+
+
+   # create an empty list to store the data from all APIs
+    all_data = []
+
+    # calls from RICK AND MORTY
+    gender_counts = read_RM_data(db_file)
+    all_data.append(('Rick and Morty', gender_counts))
+
+    # calls from POKEMON
+    pokemon_data = read_POKEMON_data(db_file)
+    all_data.append(('Pokemon', pokemon_data))
+
+    # calls from HARRY POTTER
+    hp_data, conn = read_HP_data(db_file)
+    hp_averages = calculate_HP(conn)
+    all_data.append(('Harry Potter', hp_averages))
+
+    # calls from NBA
+    nba_data = create_NBA_visualization(db_file)
+    all_data.append(('NBA', nba_data))
+
+    # write the data to a file
+    with open('api_data.txt', 'w') as f:
+        for api_name, api_data in all_data:
+            f.write(f"{api_name}:\n")
+            for item in api_data:
+                f.write(f"{item}\n")
+            f.write('\n')
+
+    # close the file and print a message
+    f.close()
+    print("Data written to file successfully!")
+    
 
     conn.commit()
     conn.close()
