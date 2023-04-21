@@ -1,0 +1,49 @@
+
+
+Rick and Morty Calculations: 
+Male percentage: 75.0%
+Female percentage: 20.0%
+
+
+Pokemon Calculations:
+bulbasaur BMR: 932.81
+ivysaur BMR: 1764.42
+venusaur BMR: 13467.80
+charmander BMR: 1142.36
+charmeleon BMR: 2573.04
+charizard BMR: 12180.69
+squirtle BMR: 1204.55
+wartortle BMR: 3037.14
+blastoise BMR: 11506.04
+caterpie BMR: 377.73
+
+
+Harry Potter Calculations:
+Gryffindor percent student population: 15
+Gryffindor percent staff population: 4
+
+Slytherin percent student population: 11
+Slytherin percent staff population: 3
+
+Hufflepuff percent student population: 4
+Hufflepuff percent staff population: 1
+
+Ravenclaw percent student population: 6
+Ravenclaw percent staff population: 1
+
+ percent student population: 4
+ percent staff population: 6
+
+
+
+NBA Calculations:
+Player ID 203999 PER score: 0.52
+Player ID 203507 PER score: 0.52
+Player ID 203954 PER score: 0.50
+Player ID 1629029 PER score: 0.46
+Player ID 1627734 PER score: 0.45
+Player ID 203497 PER score: 0.43
+Player ID 201935 PER score: 0.42
+Player ID 1627749 PER score: 0.41
+Player ID 1629028 PER score: 0.41
+Player ID 201939 PER score: 0.38
