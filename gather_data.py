@@ -151,7 +151,6 @@ def insert_HP_data(start=0, end=100):
 ################# NBA API ##########################################################################################################
 ############## EXTRA CREDIT ########################################################################################################
 
-
 def create_tables():
     """
     Create the two tables in the SQLite database
@@ -161,7 +160,7 @@ def create_tables():
     c.execute('''CREATE TABLE IF NOT EXISTS NBAplayers
                  (PLAYER INTEGER PRIMARY KEY,
                   RANK INTEGER,
-                  PLAYER_ED TEXT,
+                  PLAYER_ID TEXT,
                   TEAM_ID INTEGER,
                   TEAM TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS NBAstats
