@@ -34,8 +34,9 @@ def insert_RM_data(conn):
     #db_length = c.execute('SELECT COUNT(*) FROM RickAndMorty').fetchone()[0]
     result = c.execute('SELECT COUNT(*) FROM RickAndMorty')
     db_length = result.fetchone()[0]
-    page = (db_length/20) + 1
+    page = min(db_length/20 + 1, 42) 
     data_dic = read_RM_api(f'https://rickandmortyapi.com/api/character/?page={page}')
+    # print(data_dic)
     for character in data_dic["results"]:
         name = character["name"]
         my_id = character["id"]
@@ -163,6 +164,7 @@ def get_NBA_data():
     else:
         print("error (2)")
 
+
 def extract_NBA_data(data):
     players = []
     for player in data["resultSet"]["rowSet"]:
@@ -194,19 +196,20 @@ def create_NBA_table():
     c.execute("DROP TABLE IF EXISTS NBAplayers")
     c.execute("""
         CREATE TABLE NBAplayers (
-            PLAYER TEXT,
-            TEAM TEXT,
-            PTS TEXT,
-            REB TEXT,
-            AST TEXT,
-            STL TEXT,
-            BLK TEXT,
-            FGM TEXT,
-            FGA TEXT,
-            FTM TEXT,
-            FTA TEXT,
-            TOV TEXT,
-            GP TEXT
+            player_id INTEGER PRIMARY KEY,
+            name TEXT,
+            team TEXT,
+            pts TEXT,
+            reb TEXT,
+            ast TEXT,
+            stl TEXT,
+            blk TEXT,
+            fgm TEXT,
+            fga TEXT,
+            ftm TEXT,
+            fta TEXT,
+            tov TEXT,
+            gp TEXT
         )
     """)
 
@@ -216,44 +219,110 @@ def create_NBA_table():
 def insert_NBA_data(players):
     conn = sqlite3.connect("finalproj.db")
     c = conn.cursor()
-    c.executemany("INSERT INTO NBAplayers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", players)
+    for i, player in enumerate(players):
+        c.execute("INSERT INTO NBAplayers (player_id, name, team, pts, reb, ast, stl, blk, fgm, fga, ftm, fta, tov, gp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  (i+1, player[0], player[1], player[2], player[3], player[4], player[5], player[6], player[7], player[8], player[9], player[10], player[11], player[12]))
+    conn.commit()
+    conn.close()
+
+
+def get_NBA_stats_data():
+    url = "https://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Advanced&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=2021-22&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=&Weight="
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        return data
+    else:
+        print("error (2)")
+
+    
+def create_NBA_stats_table():
+    conn = sqlite3.connect("finalproj.db")
+    c = conn.cursor()
+
+    c.execute("DROP TABLE IF EXISTS NBAstats")
+    c.execute("""
+        CREATE TABLE NBAstats (
+            player_id INTEGER PRIMARY KEY,
+            PER REAL,
+            FG_PCT REAL,
+            FT_PCT REAL
+        )
+    """)
 
     conn.commit()
     conn.close()
+    
+def insert_NBA_stats_data(stats):
+    conn = sqlite3.connect("finalproj.db")
+    c = conn.cursor()
+    
+    c.execute("DROP TABLE IF EXISTS NBAstats")
+    c.execute("""
+        CREATE TABLE NBAstats (
+            PLAYER TEXT,
+            TEAM TEXT,
+            PTS TEXT,
+            REB TEXT,
+            AST TEXT,
+            STL TEXT,
+            BLK TEXT,
+            FGM TEXT,
+            FGA TEXT,
+            FG_PCT TEXT,
+            FG3M TEXT,
+            FG3A TEXT,
+            FG3_PCT TEXT,
+            FTM TEXT,
+            FTA TEXT,
+            FT_PCT TEXT,
+            TOV TEXT,
+            GP TEXT,
+            MIN TEXT
+        )
+    """)
+    
+    c.executemany("INSERT INTO NBAstats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  stats)
+    
+    conn.commit()
+    conn.close()
+
 
 
 ################# MAIN ##########################################################################################################
 
 def main():
-    
     # calls from RICK AND MORTY
     curr, conn = open_RM_database('finalproj.db')
+    # conn.set_trace_callback(print)
     insert_RM_data(conn)
     conn.close()
-    
+
     # calls from POKEMON
     poke_conn = open_POKEMON_database('finalproj.db')
+    # poke_conn.set_trace_callback(print)
     pokemon_data()
     poke_conn.close()
-    
+
     # calls from HARRY POTTER
     create_HP_table()
     hp_data = get_HP_data()
     extract_HP_data(hp_data, start=0, end=100)  
     insert_HP_data()
 
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM HarryPotterCharacters")
-    rows = c.fetchall()
-    conn.close()
-
     # calls from NBA
     data = get_NBA_data()
     players = extract_NBA_data(data)
     create_NBA_table()
     insert_NBA_data(players)
-
+    stats = get_NBA_stats_data()
+    create_NBA_stats_table()
+    insert_NBA_stats_data(stats)
 
 if __name__ == "__main__":
     main()
