@@ -26,12 +26,6 @@ def read_RM_data(db):
     #calculate female percentages
     female_count = (gender.count('Female') / len(gender)) * 100
 
-    # write data to file
-    with open("finalproj.txt", "w") as f:
-        f.write("\n\nRick and Morty Calculations: \n")
-        f.write("Male percentage: {:.1f}%\n".format(male_count))
-        f.write("Female percentage: {:.1f}%\n".format(female_count))
-
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
@@ -170,8 +164,8 @@ def create_HP_visualization(db_file):
     r2 = [x + bar_width for x in r1]
 
     # Create the bar chart
-    hpplt.bar(r1, student_averages, color='blue', width=bar_width, edgecolor='black', label='Average Student')
-    hpplt.bar(r2, staff_averages, color='orange', width=bar_width, edgecolor='black', label='Average Staff')
+    hpplt.bar(r1, student_averages, color='lavender', width=bar_width, label='Average Student')
+    hpplt.bar(r2, staff_averages, color='lemonchiffon', width=bar_width, label='Average Staff')
 
     # Add labels, title, and legend
     hpplt.xlabel('House')
@@ -200,8 +194,8 @@ def create_HP_visualization_2(db_file, conn):
 
     # Create the bar chart
     fig, ax = hpplt.subplots()
-    ax.bar(r1, student_counts, color='blue', width=bar_width, edgecolor='black', label='Students')
-    ax.bar(r2, staff_counts, color='orange', width=bar_width, edgecolor='black', label='Staff')
+    ax.bar(r1, student_counts, color='lavender', width=bar_width, label='Students')
+    ax.bar(r2, staff_counts, color='lemonchiffon', width=bar_width, label='Staff')
 
     # Add labels, title, and legend
     ax.set_xlabel('House')
@@ -337,4 +331,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
