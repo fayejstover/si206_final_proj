@@ -28,15 +28,19 @@ def read_RM_data(db):
 
     # write data to file
     with open("finalproj.txt", "w") as f:
+        f.write("\n\nRick and Morty Calculations: \n")
         f.write("Male percentage: {:.1f}%\n".format(male_count))
         f.write("Female percentage: {:.1f}%\n".format(female_count))
 
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
-    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
-    plt.title('Gender Breakdown of Rick and Morty Characters')
-    plt.show()
+    rmplt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
+    rmplt.title('Gender Breakdown of Rick and Morty Characters')
+    rmplt.show()
+
+    return male_count, female_count
+
 
 ############### POKEMON API ###############################################################################################################
 
@@ -62,20 +66,21 @@ def read_POKEMON_data(db_file):
 
     # write data to file
     with open("finalproj.txt", "a") as f:
-        f.write("\n\nPokemon Data:\n")
+        f.write("\n\nPokemon Calculations:\n")
         for i in range(len(names_tup)):
             f.write(f"{names_tup[i]} BMR: {bmr_lst[i]:.2f}\n")
 
     #making the visualization
     y_pos = np.arange(len(names_tup))
-    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
-    plt.xticks(y_pos, names_tup)
-    plt.ylabel('Pokemon BMR')
-    plt.xlabel('Pokemon Name')
-    plt.tick_params(axis='x', which='major', labelsize='5')
-    plt.title('Top 10 Pokemon BMR')
-    plt.show()
+    pokeplt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    pokeplt.xticks(y_pos, names_tup)
+    pokeplt.ylabel('Pokemon BMR')
+    pokeplt.xlabel('Pokemon Name')
+    pokeplt.tick_params(axis='x', which='major', labelsize='5')
+    pokeplt.title('Top 10 Pokemon BMR')
+    pokeplt.show()
 
+    return names_tup, bmr_lst
     
     
 ############ HARRY POTTER API ############################################################################################################
@@ -274,38 +279,6 @@ def create_NBA_visualization(db_file):
 
 
 
-'''
-def top_5_PER_players(db_file):
-    conn = sqlite3.connect(db_file)
-    c = conn.cursor()
-    c.execute("SELECT NBAplayers.PLAYER_ID, NBAstats.PTS, NBAstats.REB, NBAstats.AST, NBAstats.STL, NBAstats.BLK, NBAstats.FGM, NBAstats.FGA, NBAstats.FTM, NBAstats.FTA, NBAstats.TOV, NBAstats.GP \
-                FROM NBAplayers \
-                INNER JOIN NBAstats \
-                ON NBAplayers.PLAYER_ID = NBAstats.PLAYER_ID")
-    rows = c.fetchall()
-
-    per_scores = []
-
-    for row in rows:
-        print(f"Input values for player {row[0]}: PTS={row[1]}, REB={row[2]}, AST={row[3]}, STL={row[4]}, BLK={row[5]}, FGM={row[6]}, FGA={row[7]}, FTM={row[8]}, FTA={row[9]}, TOV={row[10]}, GP={row[11]}")
-        per_scores.append(calculate_PER(*row))
-
-
-    top_5_players = sorted(per_scores, key=lambda x: x[1], reverse=True)[:5]
-    top_5_players_int = [(int(player_id), int(per_score)) for player_id, per_score in top_5_players]
-
-    conn.close()
-
-    print("top_5_players_int: ")
-    print(top_5_players_int)
-    return top_5_players_int
-'''
-
-
-
-
-
-
 ################# MAIN ##########################################################################################################
 
 def main():
@@ -314,60 +287,54 @@ def main():
 
     # calls from RICK AND MORTY
     read_RM_data(db_file)
+    male_count, female_count = read_RM_data(db_file)
 
     # calls from POKEMON
     read_POKEMON_data(db_file)
+    names_tup, bmr_lst = read_POKEMON_data(db_file)
 
     # calls from HARRY POTTER
     data, conn = read_HP_data(db_file)
-    averages = calculate_HP(conn)
+    hp_averages = calculate_HP(conn)
+
+    # calls from NBA
+    rows = get_NBA_data()
+    per_scores = [calculate_PER(*row) for row in rows]
+    top_10_players = sorted(per_scores, key=lambda x: x[1], reverse=True)[:10]
+
+    # Create visualizations before writing data to file
+    rmplt.show()
+    pokeplt.show()
     create_HP_visualization(db_file)
     create_HP_visualization_2(db_file, conn)
-
-    # calls from NBA
     create_NBA_visualization(db_file)
 
-
-
-
-   # create an empty list to store the data from all APIs
-    all_data = []
-
-    # calls from RICK AND MORTY
-    gender_counts = read_RM_data(db_file)
-    all_data.append(('Rick and Morty', gender_counts))
-
-    # calls from POKEMON
-    pokemon_data = read_POKEMON_data(db_file)
-    all_data.append(('Pokemon', pokemon_data))
-
-    # calls from HARRY POTTER
-    hp_data, conn = read_HP_data(db_file)
-    hp_averages = calculate_HP(conn)
-    all_data.append(('Harry Potter', hp_averages))
-
-    # calls from NBA
-    nba_data = create_NBA_visualization(db_file)
-    all_data.append(('NBA', nba_data))
-
     # write the data to a file
-    with open('api_data.txt', 'w') as f:
-        for api_name, api_data in all_data:
-            f.write(f"{api_name}:\n")
-            for item in api_data:
-                f.write(f"{item}\n")
-            f.write('\n')
+    with open("finalproj.txt", "w") as f:
+        f.write("\n\nRick and Morty Calculations: \n")
+        f.write("Male percentage: {:.1f}%\n".format(male_count))
+        f.write("Female percentage: {:.1f}%\n".format(female_count))
+
+        f.write("\n\nPokemon Calculations:\n")
+        for i in range(len(names_tup)):
+            f.write(f"{names_tup[i]} BMR: {bmr_lst[i]:.2f}\n")
+
+        f.write("\n\nHarry Potter Calculations:\n")
+        for house in hp_averages:
+            f.write((f'{house["House"]} percent student population: {house["total Student"]}\n'))
+            f.write((f'{house["House"]} percent staff population: {house["total Staff"]}\n\n'))
+
+        f.write("\n\nNBA Calculations:\n")
+        for player_id, per_score in top_10_players:
+            f.write(f"Player ID {player_id} PER score: {per_score:.2f}\n")
 
     # close the file and print a message
     f.close()
-    print("Data written to file successfully!")
-    
+    print("Calculations written to finalproj.txt was written successfully!")
 
     conn.commit()
     conn.close()
 
-
 if __name__ == "__main__":
     main()
-
 
