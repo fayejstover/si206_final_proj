@@ -66,7 +66,7 @@ def pokemon_data():
     conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
 
-    data_dic = read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
+    data_dic = read_POKEMON_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
     c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
     result = c.execute('SELECT * FROM Pokemon')
     db_length = len(result.fetchall())
@@ -247,7 +247,7 @@ def main():
 
     # calls from POKEMON
     poke_conn = open_POKEMON_database('finalproj.db')
-    # poke_conn.set_trace_callback(print)
+    # looping through to add 100 items (25 at a time)
     for x in range(0,4):
       pokemon_data()
     poke_conn.close()
