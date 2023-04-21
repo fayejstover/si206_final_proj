@@ -1,6 +1,8 @@
 import matplotlib.pyplot as rmplt
 import matplotlib.pyplot as pokeplt
 import matplotlib.pyplot as hpplt
+import matplotlib.pyplot as nbaplt
+
 import matplotlib.pyplot as plt; plt.rcdefaults()
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,9 +31,9 @@ def read_RM_data(db):
     #making the viz
     y = np.array([male_count, female_count])
     mylabels = ["Male", "Female"]
-    plt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
-    plt.title('Gender Breakdown of Rick and Morty Characters')
-    plt.show() 
+    rmplt.pie(y, labels = mylabels, colors=['lavender', 'bisque'], autopct='%1.1f%%')
+    rmplt.title('Gender Breakdown of Rick and Morty Characters')
+    rmplt.show() 
 
 ############### POKEMON API ###############################################################################################################
 
@@ -57,14 +59,13 @@ def read_POKEMON_data(db_file):
 
     #making the visualization
     y_pos = np.arange(len(names_tup))
-    plt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
-    plt.xticks(y_pos, names_tup)
-    plt.ylabel('Pokemon BMR')
-    plt.xlabel('Pokemon Name')
-    plt.tick_params(axis='x', which='major', labelsize='5')
-    plt.title('Top 10 Pokemon BMR')
-
-    plt.show()
+    pokeplt.bar(y_pos, bmr_lst, align='center', alpha=0.5)
+    pokeplt.xticks(y_pos, names_tup)
+    pokeplt.ylabel('Pokemon BMR')
+    pokeplt.xlabel('Pokemon Name')
+    pokeplt.tick_params(axis='x', which='major', labelsize='5')
+    pokeplt.title('Top 10 Pokemon BMR')
+    pokeplt.show()
 
     
     
@@ -166,7 +167,7 @@ def create_HP_visualization(db_file):
     
     hpplt.legend()
     
-    hpplt.show()
+    #hpplt.show()
 
 
 def create_HP_visualization_2(db_file, conn):
@@ -208,20 +209,19 @@ def get_NBA_data():
     """
     conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
-    c.execute("SELECT * \
+    c.execute("SELECT NBAplayers.PLAYER_ID, NBAstats.PTS, NBAstats.REB, NBAstats.AST, NBAstats.STL, NBAstats.BLK, NBAstats.FGM, NBAstats.FGA, NBAstats.FTM, NBAstats.FTA, NBAstats.TOV, NBAstats.GP \
                 FROM NBAplayers \
                 INNER JOIN NBAstats \
-                ON NBAplayers.PLAYER = NBAstats.PLAYER \
-                WHERE NBAplayers.PLAYER_ID = NBAstats.PLAYER \
+                ON NBAplayers.PLAYER_ID = NBAstats.PLAYER_ID \
                 ORDER BY NBAstats.PTS DESC")
     rows = c.fetchall()
     conn.close()
-    print ("rows: ")
-    print (rows)
+
     return rows
 
 
-def calculate_PER(PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP):
+
+def calculate_PER(player_id, PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP):
     PTS = float(PTS)
     REB = float(REB)
     AST = float(AST)
@@ -234,71 +234,67 @@ def calculate_PER(PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP):
     TOV = float(TOV)
     GP = float(GP)
     PER = (PTS + REB + AST + STL + BLK - (FGA - FGM) - (FTA - FTM) - TOV) / GP
-    return PER
+
+    return (player_id, PER)
 
 
+def create_NBA_visualization(db_file):
+    # Retrieve NBA data from the database
+    rows = get_NBA_data()
+
+    # Calculate PER score for each player
+    per_scores = []
+    for row in rows:
+        per_scores.append(calculate_PER(*row))
+
+    # Sort players by PER score and select top 10
+    top_10_players = sorted(per_scores, key=lambda x: x[1], reverse=True)[:10]
+
+    # Extract player IDs and PER scores
+    player_ids = [player_id for player_id, per_score in top_10_players]
+    per_scores = [per_score for player_id, per_score in top_10_players]
+
+    # Create bar chart
+    nbaplt.bar(range(len(player_ids)), per_scores)
+    nbaplt.xticks(range(len(player_ids)), player_ids)
+    nbaplt.ylim(0, 1)
+    nbaplt.xlabel('Player ID')
+    nbaplt.ylabel('PER Score')
+    nbaplt.title('Top 10 NBA Players by PER Score')
+    nbaplt.show()
+
+
+
+'''
 def top_5_PER_players(db_file):
-    """
-    Retrieve the top 5 NBA players by player efficiency rating (PER) from the database.
-    """
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
-
-    c.execute("SELECT NBAplayers.PLAYER_ID, NBAplayers.PLAYER, NBAstats.PER \
+    c.execute("SELECT NBAplayers.PLAYER_ID, NBAstats.PTS, NBAstats.REB, NBAstats.AST, NBAstats.STL, NBAstats.BLK, NBAstats.FGM, NBAstats.FGA, NBAstats.FTM, NBAstats.FTA, NBAstats.TOV, NBAstats.GP \
                 FROM NBAplayers \
-                INNER JOIN NBAstats ON NBAplayers.PLAYER_ID = NBAstats.PLAYER \
-                ORDER BY NBAstats.PER DESC LIMIT 5")
-
+                INNER JOIN NBAstats \
+                ON NBAplayers.PLAYER_ID = NBAstats.PLAYER_ID")
     rows = c.fetchall()
-    result = []
+
+    per_scores = []
 
     for row in rows:
-        player = {'id': row[0], 'name': row[1], 'PER': row[2]}
-        result.append(player)
+        print(f"Input values for player {row[0]}: PTS={row[1]}, REB={row[2]}, AST={row[3]}, STL={row[4]}, BLK={row[5]}, FGM={row[6]}, FGA={row[7]}, FTM={row[8]}, FTA={row[9]}, TOV={row[10]}, GP={row[11]}")
+        per_scores.append(calculate_PER(*row))
+
+
+    top_5_players = sorted(per_scores, key=lambda x: x[1], reverse=True)[:5]
+    top_5_players_int = [(int(player_id), int(per_score)) for player_id, per_score in top_5_players]
 
     conn.close()
-    return result
 
-'''
-def top_5_PER_players(db_file):
-    PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP = get_NBA_data(db_file)
-
-    players = []
-    for i in range(len(PTS)):
-        player_stats = {}
-        player_stats['name'] = 'Player ' + str(i+1)
-        player_stats['PTS'] = PTS[i]
-        player_stats['REB'] = REB[i]
-        player_stats['AST'] = AST[i]
-        player_stats['STL'] = STL[i]
-        player_stats['BLK'] = BLK[i]
-        player_stats['FGM'] = FGM[i]
-        player_stats['FGA'] = FGA[i]
-        player_stats['FTM'] = FTM[i]
-        player_stats['FTA'] = FTA[i]
-        player_stats['TOV'] = TOV[i]
-        player_stats['GP'] = GP[i]
-        player_stats['PER'] = calculate_PER(PTS[i], REB[i], AST[i], STL[i], BLK[i], FGM[i], FGA[i], FTM[i], FTA[i], TOV[i], GP[i])
-        players.append(player_stats)
-
-    players.sort(key=lambda x: x['PER'], reverse=True)
-
-    top_5 = players[:5]
-    return top_5
+    print("top_5_players_int: ")
+    print(top_5_players_int)
+    return top_5_players_int
 '''
 
-def create_NBA_visualization(db_file, conn):
-    top_players = top_5_PER_players(db_file)
 
-    player_ids = [player['id'] for player in top_players]
-    player_per = [player['PER'] for player in top_players]
 
-    plt.bar(player_ids, player_per)
-    plt.xlabel('Player IDs')
-    plt.ylabel('PER Ratings')
-    plt.title('Top 5 NBA Players by PER Rating')
-    
-    plt.show()
+
 
 
 ################# MAIN ##########################################################################################################
@@ -320,7 +316,7 @@ def main():
     create_HP_visualization_2(db_file, conn)
 
     # calls from NBA
-    create_NBA_visualization(db_file, conn)
+    create_NBA_visualization(db_file)
 
     conn.commit()
     conn.close()
@@ -328,4 +324,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
