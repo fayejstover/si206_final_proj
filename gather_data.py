@@ -151,144 +151,69 @@ def insert_HP_data(start=0, end=100):
 ################# NBA API ##########################################################################################################
 ############## EXTRA CREDIT ########################################################################################################
 
-def get_NBA_data():
+
+def create_tables():
+    """
+    Create the two tables in the SQLite database
+    """
+    conn = sqlite3.connect('finalproj.db')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS NBAplayers
+                 (PLAYER INTEGER PRIMARY KEY,
+                  RANK INTEGER,
+                  PLAYER_ED TEXT,
+                  TEAM_ID INTEGER,
+                  TEAM TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS NBAstats
+                 (PLAYER INTEGER PRIMARY KEY,
+                  PTS REAL,
+                  REB REAL,
+                  AST REAL,
+                  STL REAL,
+                  BLK REAL,
+                  FGM REAL,
+                  FGA REAL,
+                  FTM REAL,
+                  FTA REAL,
+                  TOV REAL,
+                  GP REAL)''')
+    conn.commit()
+    conn.close()
+
+def insert_data():
+    """
+    Fetch data from the NBA API and insert it into the SQLite tables
+    """
     url = "https://stats.nba.com/stats/leagueleaders?LeagueID=00&PerMode=PerGame&Scope=S&Season=2021-22&SeasonType=Regular+Season&StatCategory=PTS"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
-    }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url)
+    data = response.json()["resultSet"]["rowSet"]
 
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        print("error (2)")
-
-
-def extract_NBA_data(data):
-    players = []
-    for player in data["resultSet"]["rowSet"]:
-        try:
-            name = str(player[2])
-            team = str(player[4])
-            pts = str(player[23])
-            reb = str(player[18])
-            ast = str(player[19])
-            stl = str(player[20])
-            blk = str(player[21])
-            fgm = str(player[11])
-            fga = str(player[12])
-            ftm = str(player[14])
-            fta = str(player[15])
-            tov = str(player[22])
-            gp = str(player[6])
-
-            row = (name, team, pts, reb, ast, stl, blk, fgm, fga, ftm, fta, tov, gp)
-            players.append(row)
-        except IndexError:
-            pass
-    return players
-
-def create_NBA_table():
-    conn = sqlite3.connect("finalproj.db")
+    conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
 
-    c.execute("DROP TABLE IF EXISTS NBAplayers")
-    c.execute("""
-        CREATE TABLE NBAplayers (
-            player_id INTEGER PRIMARY KEY,
-            name TEXT,
-            team TEXT,
-            pts TEXT,
-            reb TEXT,
-            ast TEXT,
-            stl TEXT,
-            blk TEXT,
-            fgm TEXT,
-            fga TEXT,
-            ftm TEXT,
-            fta TEXT,
-            tov TEXT,
-            gp TEXT
-        )
-    """)
+    for row in data:
+        player = row[0]
+        rank = row[1]
+        player_id = row[2]
+        team_id = row[3]
+        team = row[4]
+        gp = row[5]
+        fgm = row[7]
+        fga = row[8]
+        ftm = row[13]
+        fta = row[14]
+        reb = row[18]
+        ast = row[19]
+        stl = row[20]
+        blk = row[21]
+        tov = row[22]
+        pts = row[23]
 
-    conn.commit()
-    conn.close()
+        c.execute("INSERT INTO NBAplayers (PLAYER, RANK, PLAYER_ID, TEAM_ID, TEAM) VALUES (?, ?, ?, ?, ?)",
+                  (player, rank, player_id, team_id, team))
+        c.execute("INSERT INTO NBAstats (PLAYER, PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                  (player, pts, reb, ast, stl, blk, fgm, fga, ftm, fta, tov, gp))
 
-def insert_NBA_data(players):
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-    for i, player in enumerate(players):
-        c.execute("INSERT INTO NBAplayers (player_id, name, team, pts, reb, ast, stl, blk, fgm, fga, ftm, fta, tov, gp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  (i+1, player[0], player[1], player[2], player[3], player[4], player[5], player[6], player[7], player[8], player[9], player[10], player[11], player[12]))
-    conn.commit()
-    conn.close()
-
-
-def get_NBA_stats_data():
-    url = "https://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Advanced&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=2021-22&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=&Weight="
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
-    }
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        print("error (2)")
-
-    
-def create_NBA_stats_table():
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-
-    c.execute("DROP TABLE IF EXISTS NBAstats")
-    c.execute("""
-        CREATE TABLE NBAstats (
-            player_id INTEGER PRIMARY KEY,
-            PER REAL,
-            FG_PCT REAL,
-            FT_PCT REAL
-        )
-    """)
-
-    conn.commit()
-    conn.close()
-    
-def insert_NBA_stats_data(stats):
-    conn = sqlite3.connect("finalproj.db")
-    c = conn.cursor()
-    
-    c.execute("DROP TABLE IF EXISTS NBAstats")
-    c.execute("""
-        CREATE TABLE NBAstats (
-            PLAYER TEXT,
-            TEAM TEXT,
-            PTS TEXT,
-            REB TEXT,
-            AST TEXT,
-            STL TEXT,
-            BLK TEXT,
-            FGM TEXT,
-            FGA TEXT,
-            FG_PCT TEXT,
-            FG3M TEXT,
-            FG3A TEXT,
-            FG3_PCT TEXT,
-            FTM TEXT,
-            FTA TEXT,
-            FT_PCT TEXT,
-            TOV TEXT,
-            GP TEXT,
-            MIN TEXT
-        )
-    """)
-    
-    c.executemany("INSERT INTO NBAstats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  stats)
-    
     conn.commit()
     conn.close()
 
@@ -316,13 +241,8 @@ def main():
     insert_HP_data()
 
     # calls from NBA
-    data = get_NBA_data()
-    players = extract_NBA_data(data)
-    create_NBA_table()
-    insert_NBA_data(players)
-    stats = get_NBA_stats_data()
-    create_NBA_stats_table()
-    insert_NBA_stats_data(stats)
+    create_tables()
+    insert_data()
 
 if __name__ == "__main__":
     main()
