@@ -63,29 +63,25 @@ def read_POKEMON_api(url):
 
 
 def pokemon_data():
-    conn = sqlite3.connect('finalproj.db')
-    c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
-    conn.commit()
+    conn = sqlite3.connect('finalproj.db')
+    c = conn.cursor()
 
-    data_dic = read_POKEMON_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
-    result = c.execute('SELECT COUNT(*) FROM Pokemon')
-    db_length = result.fetchone()[0]
-    
-    for x in range(db_length, db_length + 100, 25):
-        data_slice = data_dic['results'][x:min(x+25, db_length+100)]
-        for pokemon in data_slice:
-            name = pokemon['name']
-            url = pokemon['url']
-            pokemon_api = read_POKEMON_api(url)
-            height = pokemon_api['height']
-            id = pokemon_api['id']
-            weight = pokemon_api['weight']
-            c.execute("INSERT OR IGNORE INTO Pokemon (name, id, height, weight) VALUES (?,?,?,?)",(name, id, height, weight))
-    conn.commit()
-    conn.close()
+    data_dic = read_api('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
+    c.execute('CREATE TABLE IF NOT EXISTS Pokemon (name TEXT, id INTEGER, height INTEGER, weight INTEGER)')
+    result = c.execute('SELECT * FROM Pokemon')
+    db_length = len(result.fetchall())
 
-    
+    for x in range(db_length, db_length + 25):
+        name = data_dic['results'][x]['name']
+        url = data_dic['results'][x]['url']
+        pokemon_api = read_api(url)
+        height = pokemon_api['height']
+        id = pokemon_api['id']
+        weight = pokemon_api['weight']
+        c.execute("INSERT OR IGNORE INTO Pokemon (name, id, height, weight) VALUES (?,?,?,?)",(name, id, height, weight))
+    conn.commit()
+    conn.close()
+  
 
 ########## HARRY POTTER API ####################################################################################################
 def get_HP_data():
@@ -252,7 +248,8 @@ def main():
     # calls from POKEMON
     poke_conn = open_POKEMON_database('finalproj.db')
     # poke_conn.set_trace_callback(print)
-    pokemon_data()
+    for x in range(0,4):
+      pokemon_data()
     poke_conn.close()
 
     # calls from HARRY POTTER
