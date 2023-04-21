@@ -202,30 +202,23 @@ def create_HP_visualization_2(db_file, conn):
 ################# NBA API ################################################################################################################
 ############## EXTRA CREDIT ##############################################################################################################
 
-def read_NBA_data(db_file):
-    conn = sqlite3.connect(db_file)
+def get_NBA_data():
+    """
+    Retrieve a joined result set of NBAplayers and NBAstats tables based on the integer key player_id
+    """
+    conn = sqlite3.connect('finalproj.db')
     c = conn.cursor()
-    
-    # Retrieve the required columns from the NBAplayers table
-    c.execute("SELECT PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP FROM NBAplayers")
+    c.execute("SELECT * \
+                FROM NBAplayers \
+                INNER JOIN NBAstats \
+                ON NBAplayers.PLAYER = NBAstats.PLAYER \
+                WHERE NBAplayers.PLAYER_ID = NBAstats.PLAYER \
+                ORDER BY NBAstats.PTS DESC")
     rows = c.fetchall()
-    
-    # Separate the data into separate lists and convert to float data type
-    PTS = [float(row[0]) for row in rows]
-    REB = [float(row[1]) for row in rows]
-    AST = [float(row[2]) for row in rows]
-    STL = [float(row[3]) for row in rows]
-    BLK = [float(row[4]) for row in rows]
-    FGM = [float(row[5]) for row in rows]
-    FGA = [float(row[6]) for row in rows]
-    FTM = [float(row[7]) for row in rows]
-    FTA = [float(row[8]) for row in rows]
-    TOV = [float(row[9]) for row in rows]
-    GP = [float(row[10]) for row in rows]
-    
     conn.close()
-    
-    return PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP
+    print ("rows: ")
+    print (rows)
+    return rows
 
 
 def calculate_PER(PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP):
@@ -245,7 +238,30 @@ def calculate_PER(PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP):
 
 
 def top_5_PER_players(db_file):
-    PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP = read_NBA_data(db_file)
+    """
+    Retrieve the top 5 NBA players by player efficiency rating (PER) from the database.
+    """
+    conn = sqlite3.connect(db_file)
+    c = conn.cursor()
+
+    c.execute("SELECT NBAplayers.PLAYER_ID, NBAplayers.PLAYER, NBAstats.PER \
+                FROM NBAplayers \
+                INNER JOIN NBAstats ON NBAplayers.PLAYER_ID = NBAstats.PLAYER \
+                ORDER BY NBAstats.PER DESC LIMIT 5")
+
+    rows = c.fetchall()
+    result = []
+
+    for row in rows:
+        player = {'id': row[0], 'name': row[1], 'PER': row[2]}
+        result.append(player)
+
+    conn.close()
+    return result
+
+'''
+def top_5_PER_players(db_file):
+    PTS, REB, AST, STL, BLK, FGM, FGA, FTM, FTA, TOV, GP = get_NBA_data(db_file)
 
     players = []
     for i in range(len(PTS)):
@@ -269,16 +285,16 @@ def top_5_PER_players(db_file):
 
     top_5 = players[:5]
     return top_5
-
+'''
 
 def create_NBA_visualization(db_file, conn):
     top_players = top_5_PER_players(db_file)
 
-    player_names = [player['name'] for player in top_players]
+    player_ids = [player['id'] for player in top_players]
     player_per = [player['PER'] for player in top_players]
 
-    plt.bar(player_names, player_per)
-    plt.xlabel('Player Names')
+    plt.bar(player_ids, player_per)
+    plt.xlabel('Player IDs')
     plt.ylabel('PER Ratings')
     plt.title('Top 5 NBA Players by PER Rating')
     
@@ -286,7 +302,6 @@ def create_NBA_visualization(db_file, conn):
 
 
 ################# MAIN ##########################################################################################################
-
 
 def main():
     db_file = 'finalproj.db'
@@ -305,15 +320,12 @@ def main():
     create_HP_visualization_2(db_file, conn)
 
     # calls from NBA
-    top_5_PER_players(db_file)
     create_NBA_visualization(db_file, conn)
 
     conn.commit()
     conn.close()
 
 
-
 if __name__ == "__main__":
     main()
-
 
